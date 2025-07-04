@@ -5,7 +5,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test-deps": "node test_dependencies.js",
+    "setup-data": "node setup_sample_data.js",
+    "check-data": "node check_data.js",
+    "test-login": "node test_login_api.js",
+    "debug-login": "node debug_login.js",
+    "test-member-stats": "node test_member_stats.js",
+    "clean-data": "node -e \"require('./setup_sample_data').connectDB().then(() => { const mongoose = require('mongoose'); mongoose.connection.db.dropDatabase().then(() => { console.log('Database cleaned'); process.exit(0); }); })\"",
+    "debug-project": "node debug_project_data.js",
+    "create-rich-data": "node create_rich_sample_data.js",
+    "create-personal-data": "node create_personal_sample_data.js",
+    "check-personal-data": "node check_personal_data.js"
   },
   "keywords": [],
   "author": "",

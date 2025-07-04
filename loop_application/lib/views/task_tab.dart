@@ -19,6 +19,9 @@ class TaskTab extends StatefulWidget {
 
 class _TaskTabState extends State<TaskTab> {
   int _selectedCategory = 2;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   //* Read all categories from database
   void readCategories() {
@@ -42,6 +45,46 @@ class _TaskTabState extends State<TaskTab> {
     Provider.of<TaskModel>(context, listen: false).findByCategory(category);
   }
 
+  //* Filter tasks based on search query
+  List<Task> _filterTasks(List<Task> tasks, TaskModel taskModel) {
+    if (_searchQuery.isEmpty) {
+      return tasks;
+    }
+    
+    // Khi đang search, tìm trong tất cả task thay vì chỉ trong category hiện tại
+    List<Task> allTasks = _isSearching ? taskModel.currentTask : tasks;
+    
+    return allTasks.where((task) =>
+      task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      (task.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
+    ).toList();
+  }
+
+  //* Handle search
+  void _handleSearch(String query) {
+    setState(() {
+      _searchQuery = query;
+      // Load all tasks when searching
+      if (query.isNotEmpty) {
+        Provider.of<TaskModel>(context, listen: false).findAll();
+      } else {
+        // Return to category view when search is empty
+        readTaskInSelectedCategory(_selectedCategory);
+      }
+    });
+  }
+
+  //* Toggle search mode
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchQuery = '';
+        _searchController.clear();
+      }
+    });
+  }
+
   @override
   void initState() {
     _selectedCategory = 2;
@@ -49,6 +92,12 @@ class _TaskTabState extends State<TaskTab> {
     readTaskInSelectedCategory(_selectedCategory);
     readSelectedCategory(_selectedCategory);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,17 +117,43 @@ class _TaskTabState extends State<TaskTab> {
 
     List<Task> tasksInCategory = taskModel.currentTask;
 
-    // print(tasksInCategory.toString());
+    // Áp dụng filter tìm kiếm
+    List<Task> filteredTasksInCategory = _filterTasks(tasksInCategory, taskModel);
 
     List<Task> pendingTask =
-        tasksInCategory.where((e) => e.status == 1).toList();
+        filteredTasksInCategory.where((e) => e.status == 1).toList();
     List<Task> completedTask =
-        tasksInCategory.where((e) => e.status == 2).toList();
+        filteredTasksInCategory.where((e) => e.status == 2).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nhiệm vụ'),
+        title: _isSearching 
+          ? TextField(
+              controller: _searchController,
+              onChanged: _handleSearch,
+              autofocus: true,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm nhiệm vụ...',
+                hintStyle: TextStyle(color: Colors.white70),
+                border: InputBorder.none,
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.clear, color: Colors.white),
+                  onPressed: () {
+                    _searchController.clear();
+                    _handleSearch('');
+                  },
+                ),
+              ),
+            )
+          : Text('Nhiệm vụ'),
         backgroundColor: Theme.of(context).colorScheme.primary,
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: _toggleSearch,
+          ),
+        ],
       ),
       floatingActionButton: FloatingAddButton(
         defaultNewTaskDate: DateTime.now(),
@@ -86,22 +161,48 @@ class _TaskTabState extends State<TaskTab> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Column(
         children: [
-          //TODO: Make this dynamic
-          //TODO: Make tasks can view in sorted list
-          _listOfCategories(screenWidth, context, currentCategories),
+          // Hiển thị categories chỉ khi không đang tìm kiếm
+          if (!_isSearching) 
+            _listOfCategories(screenWidth, context, currentCategories),
+          
+          // Hiển thị search info khi đang tìm kiếm
+          if (_isSearching && _searchQuery.isNotEmpty)
+            Container(
+              width: screenWidth,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Text(
+                'Tìm kiếm: "$_searchQuery" - ${filteredTasksInCategory.length} kết quả',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                // Hiển thị header category chỉ khi không đang tìm kiếm
+                if (!_isSearching)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
                       Text(
                         holderSelectedCategory.isNotEmpty
                             ? holderSelectedCategory.first.title
@@ -370,8 +471,38 @@ class _TaskTabState extends State<TaskTab> {
                   ),
                 ),
                 Expanded(
-                  child: ListView(
-                    children: [
+                  child: _isSearching && filteredTasksInCategory.isEmpty && _searchQuery.isNotEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Không tìm thấy nhiệm vụ nào',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Thử tìm kiếm với từ khóa khác',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView(
+                        children: [
                       Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary,
@@ -470,12 +601,39 @@ class _TaskTabState extends State<TaskTab> {
                       _selectedCategory = categoryItem.id;
                       readTaskInSelectedCategory(_selectedCategory);
                       readSelectedCategory(_selectedCategory);
+                      // Clear search when switching categories
+                      if (_isSearching) {
+                        _isSearching = false;
+                        _searchQuery = '';
+                        _searchController.clear();
+                      }
                     });
                   },
                   child: Container(
                     padding: EdgeInsets.only(right: 25),
+                    decoration: _selectedCategory == categoryItem.id
+                      ? BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Theme.of(context).colorScheme.primaryContainer,
+                              width: 3,
+                            ),
+                          ),
+                        )
+                      : null,
                     child: Center(
-                      child: Text(categoryItem.title, style: normalText),
+                      child: Text(
+                        categoryItem.title, 
+                        style: TextStyle(
+                          fontSize: normalText.fontSize,
+                          fontWeight: _selectedCategory == categoryItem.id 
+                            ? FontWeight.bold 
+                            : normalText.fontWeight,
+                          color: _selectedCategory == categoryItem.id
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : normalText.color,
+                        ),
+                      ),
                     ),
                   ),
                 );

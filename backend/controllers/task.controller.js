@@ -647,6 +647,86 @@ const get_task_statistics = async (req, res) => {
             averageCompletionTime = Math.round(totalTime / completedTasks.length / (1000 * 60 * 60 * 24)); // Số ngày
         }
 
+        // Thống kê theo thành viên
+        const memberStats = {};
+        
+        // Lấy thông tin thành viên từ project
+        const User = require('../models/user.model');
+        const memberIds = project.assignedMembers || [];
+        
+        console.log('Project members:', memberIds);
+        console.log('Total tasks:', tasks.length);
+        
+        // Khởi tạo stats cho từng thành viên trong project
+        for (const memberId of memberIds) {
+            try {
+                const member = await User.findById(memberId);
+                if (member) {
+                    memberStats[memberId.toString()] = {
+                        fullName: member.displayName || 'Unknown User',
+                        email: member.email || 'unknown@example.com',
+                        avatar: member.avatar || null,
+                        totalTasks: 0,
+                        completedTasks: 0
+                    };
+                } else {
+                    console.log('Member not found:', memberId);
+                }
+            } catch (err) {
+                console.log('Error finding member:', memberId, err);
+                // Thêm thành viên với thông tin mặc định nếu có lỗi
+                memberStats[memberId.toString()] = {
+                    fullName: 'Unknown User',
+                    email: 'unknown@example.com',
+                    avatar: null,
+                    totalTasks: 0,
+                    completedTasks: 0
+                };
+            }
+        }
+
+        // Đếm nhiệm vụ theo thành viên
+        for (const task of tasks) {
+            console.log('Task:', task.title, 'Assignee:', task.assignee, 'Status:', task.status);
+            if (task.assignee) {
+                const assigneeId = task.assignee.toString();
+                
+                // Nếu assignee chưa có trong memberStats, thêm vào
+                if (!memberStats[assigneeId]) {
+                    console.log('Adding new assignee to stats:', assigneeId);
+                    memberStats[assigneeId] = {
+                        fullName: 'Unknown User',
+                        email: 'unknown@example.com',
+                        avatar: null,
+                        totalTasks: 0,
+                        completedTasks: 0
+                    };
+                    
+                    // Thử lấy thông tin thành viên từ database đồng bộ
+                    try {
+                        const user = await User.findById(assigneeId);
+                        if (user) {
+                            memberStats[assigneeId].fullName = user.displayName || 'Unknown User';
+                            memberStats[assigneeId].email = user.email || 'unknown@example.com';
+                            memberStats[assigneeId].avatar = user.avatar || null;
+                        }
+                    } catch (err) {
+                        console.log('Error fetching assignee info:', err);
+                    }
+                }
+                
+                memberStats[assigneeId].totalTasks++;
+                if (task.status === 'completed' || task.status === 'closed') {
+                    memberStats[assigneeId].completedTasks++;
+                }
+            }
+        }
+
+        // Chuyển đổi thành array - chỉ hiển thị thành viên có nhiệm vụ
+        const memberStatsArray = Object.values(memberStats).filter(member => member.totalTasks > 0);
+        
+        console.log('Final member stats:', memberStatsArray);
+
         // Trả về kết quả thống kê
         res.status(200).json({
             totalTasks: tasks.length,
@@ -655,7 +735,8 @@ const get_task_statistics = async (req, res) => {
             completionStats,
             statusChangeStats,
             averageCompletionTime,
-            completedTasksCount: completedTasks.length
+            completedTasksCount: completedTasks.length,
+            memberStats: memberStatsArray
         });
     } catch (error) {
         res.status(400).json({ message: error.message });

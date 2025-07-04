@@ -602,7 +602,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                           Icon(
                             task == null ? Icons.add_task : Icons.edit_note,
                             color: Theme.of(context).colorScheme.onPrimary,
-                            size: 16, // Giảm từ 18 xuống 16
+                            size: 20, // Giảm từ 18 xuống 16
                           ),
                           SizedBox(width: 6), // Giảm từ 8 xuống 6
                           Expanded(
@@ -611,7 +611,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                                   ? 'Tạo nhiệm vụ mới'
                                   : 'Chỉnh sửa nhiệm vụ',
                               style: TextStyle(
-                                fontSize: 14, // Giảm từ 16 xuống 14
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).colorScheme.onPrimary,
                               ),
@@ -635,7 +635,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                     Container(
                       margin: EdgeInsets.only(top: 2), // Giảm từ 4 xuống 2
                       child: TextFormField(
-                        style: TextStyle(fontSize: 13), // Giảm từ 14 xuống 13
+                        style: TextStyle(fontSize: 16), // Giảm từ 14 xuống 13
                         initialValue: title,
                         textInputAction: TextInputAction.done,
                         maxLines: null,
@@ -643,11 +643,11 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                         decoration: InputDecoration(
                           label: Text(
                             'Tiêu đề',
-                            style: TextStyle(fontSize: 13),
-                          ), // Giảm từ 14 xuống 13
+                            style: TextStyle(fontSize: 16),
+                          ),
                           alignLabelWithHint: true,
                           floatingLabelStyle: TextStyle(
-                            fontSize: 13, // Giảm từ 14 xuống 13
+                            fontSize: 16,
                             color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                           border: OutlineInputBorder(
@@ -672,7 +672,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                     Container(
                       margin: EdgeInsets.only(top: 2), // Giảm từ 4 xuống 2
                       child: TextFormField(
-                        style: TextStyle(fontSize: 13), // Giảm từ 14 xuống 13
+                        style: TextStyle(fontSize: 16), // Giảm từ 14 xuống 13
                         initialValue: description,
                         textInputAction: TextInputAction.newline,
                         maxLines: 3,
@@ -680,11 +680,11 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                         decoration: InputDecoration(
                           label: Text(
                             'Mô tả',
-                            style: TextStyle(fontSize: 13),
+                            style: TextStyle(fontSize: 16),
                           ), // Giảm từ 14 xuống 13
                           alignLabelWithHint: true,
                           floatingLabelStyle: TextStyle(
-                            fontSize: 13, // Giảm từ 14 xuống 13
+                            fontSize: 16, // Giảm từ 14 xuống 13
                             color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                           border: OutlineInputBorder(
@@ -706,289 +706,229 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                     ),
 
                     // Deadline option
-                    Container(
-                      margin: EdgeInsets.symmetric(
-                        vertical: 2,
-                      ), // Giảm từ 4 xuống 2
-                      padding: EdgeInsets.all(10), // Giảm từ 12 xuống 10
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(
-                          8,
-                        ), // Giảm từ 10 xuống 8
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.outline.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 14, // Giảm từ 16 xuống 14
-                          ),
-                          SizedBox(width: 6), // Giảm từ 8 xuống 6
-                          Flexible(
-                            child: Text(
-                              'Thời hạn:',
-                              style: TextStyle(
-                                fontSize: 12, // Giảm từ 13 xuống 12
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Giảm từ 8 xuống 6
+                        Flexible(
+                          child: Text(
+                            'Thời hạn:',
+                            style: TextStyle(
+                              fontSize: 16, // Giảm từ 13 xuống 12
+                              fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          Spacer(),
-                          GestureDetector(
-                            onTap: () async {
-                              DateTime? pickedDate =
-                                  await _customDateTimePicker(context: context);
-                              if (pickedDate != null) {
-                                setDialogState(() {
-                                  selectedDate = pickedDate;
-                                });
-                              }
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 6, // Giảm từ 8 xuống 6
-                                vertical: 3, // Giảm từ 4 xuống 3
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(
-                                  12,
-                                ), // Giảm từ 16 xuống 12
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.edit_calendar,
-                                    size: 10, // Giảm từ 12 xuống 10
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                  SizedBox(width: 2), // Giảm từ 3 xuống 2
-                                  Flexible(
-                                    child: Text(
-                                      DateFormat(
-                                        'dd/MM/yyyy HH:mm',
-                                      ).format(selectedDate),
-                                      style: TextStyle(
-                                        color:
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 10, // Giảm từ 11 xuống 10
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                        ),
+                        Spacer(),
+                        GestureDetector(
+                          onTap: () async {
+                            DateTime? pickedDate = await _customDateTimePicker(
+                              context: context,
+                            );
+                            if (pickedDate != null) {
+                              setDialogState(() {
+                                selectedDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6, // Giảm từ 8 xuống 6
+                              vertical: 3, // Giảm từ 4 xuống 3
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(
+                                12,
+                              ), // Giảm từ 16 xuống 12
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.edit_calendar,
+                                  size: 14, // Giảm từ 12 xuống 10
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                SizedBox(width: 2), // Giảm từ 3 xuống 2
+                                Flexible(
+                                  child: Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy HH:mm',
+                                    ).format(selectedDate),
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14, // Giảm từ 11 xuống 10
                                     ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Flag selection - Chọn mức độ ưu tiên
-                    Container(
-                      margin: EdgeInsets.symmetric(
-                        vertical: 2,
-                      ), // Giảm từ 4 xuống 2
-                      padding: EdgeInsets.all(10), // Giảm từ 12 xuống 10
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(
-                          8,
-                        ), // Giảm từ 10 xuống 8
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.outline.withOpacity(0.3),
-                          width: 1,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.flag_outlined,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 14, // Giảm từ 16 xuống 14
-                          ),
-                          SizedBox(width: 6), // Giảm từ 8 xuống 6
-                          Flexible(
-                            child: Text(
-                              'Mức độ ưu tiên:',
-                              style: TextStyle(
-                                fontSize: 12, // Giảm từ 13 xuống 12
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [ // Giảm từ 8 xuống 6
+                        Flexible(
+                          child: Text(
+                            'Mức độ ưu tiên:',
+                            style: TextStyle(
+                              fontSize: 16, // Giảm từ 13 xuống 12
+                              fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(width: 6), // Giảm từ 8 xuống 6
-                          Expanded(
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 3,
-                                vertical: 1,
-                              ), // Giảm padding thêm nữa
-                              decoration: BoxDecoration(
+                        ),
+                        SizedBox(width: 6), // Giảm từ 8 xuống 6
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 3,
+                              vertical: 1,
+                            ), // Giảm padding thêm nữa
+                            decoration: BoxDecoration(
+                              color:
+                                  selectedFlag != 'none'
+                                      ? _getFlagColor(
+                                        selectedFlag,
+                                      ).withOpacity(0.15)
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .primaryContainer
+                                          .withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(
+                                6,
+                              ), // Giảm từ 8 xuống 6
+                              border: Border.all(
                                 color:
                                     selectedFlag != 'none'
                                         ? _getFlagColor(
                                           selectedFlag,
-                                        ).withOpacity(0.15)
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .primaryContainer
-                                            .withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(
-                                  6,
-                                ), // Giảm từ 8 xuống 6
-                                border: Border.all(
+                                        ).withOpacity(0.4)
+                                        : Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer,
+                                width: 1,
+                              ),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedFlag,
+                                isExpanded: true, // Để tránh overflow
+                                isDense: true, // Thêm để giảm kích thước
+                                style: TextStyle(
                                   color:
                                       selectedFlag != 'none'
-                                          ? _getFlagColor(
-                                            selectedFlag,
-                                          ).withOpacity(0.4)
+                                          ? _getFlagColor(selectedFlag)
                                           : Theme.of(
                                             context,
-                                          ).colorScheme.primaryContainer,
-                                  width: 1,
+                                          ).colorScheme.primary,
+                                  fontSize: 14, // Giảm từ 10 xuống 9
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedFlag,
-                                  isExpanded: true, // Để tránh overflow
-                                  isDense: true, // Thêm để giảm kích thước
-                                  style: TextStyle(
-                                    color:
-                                        selectedFlag != 'none'
-                                            ? _getFlagColor(selectedFlag)
-                                            : Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                    fontSize: 9, // Giảm từ 10 xuống 9
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  dropdownColor:
-                                      Theme.of(context).colorScheme.surface,
-                                  items:
-                                      [
-                                        {'value': 'none', 'label': 'Không có'},
-                                        {'value': 'low', 'label': 'Thấp'},
-                                        {'value': 'medium', 'label': 'TB'},
-                                        {'value': 'high', 'label': 'Cao'},
-                                        {
-                                          'value': 'priority',
-                                          'label': 'Ưu tiên',
-                                        },
-                                      ].map((flag) {
-                                        return DropdownMenuItem<String>(
-                                          value: flag['value'],
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 2,
-                                              vertical: 1,
-                                            ), // Giảm padding thêm nữa
-                                            decoration: BoxDecoration(
+                                dropdownColor:
+                                    Theme.of(context).colorScheme.surface,
+                                items:
+                                    [
+                                      {'value': 'none', 'label': 'Không có'},
+                                      {'value': 'low', 'label': 'Thấp'},
+                                      {'value': 'medium', 'label': 'TB'},
+                                      {'value': 'high', 'label': 'Cao'},
+                                      {'value': 'priority', 'label': 'Ưu tiên'},
+                                    ].map((flag) {
+                                      return DropdownMenuItem<String>(
+                                        value: flag['value'],
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                            vertical: 2,
+                                          ), // Giảm padding thêm nữa
+                                          decoration: BoxDecoration(
+                                            color:
+                                                flag['value'] != 'none'
+                                                    ? _getFlagColor(
+                                                      flag['value']!,
+                                                    ).withOpacity(0.1)
+                                                    : Colors.grey.withOpacity(
+                                                      0.1,
+                                                    ),
+                                            borderRadius: BorderRadius.circular(
+                                              3,
+                                            ), // Giảm từ 4 xuống 3
+                                            border: Border.all(
                                               color:
                                                   flag['value'] != 'none'
                                                       ? _getFlagColor(
                                                         flag['value']!,
-                                                      ).withOpacity(0.1)
+                                                      ).withOpacity(0.3)
                                                       : Colors.grey.withOpacity(
-                                                        0.1,
+                                                        0.3,
                                                       ),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    3,
-                                                  ), // Giảm từ 4 xuống 3
-                                              border: Border.all(
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                _getFlagIcon(flag['value']!),
                                                 color:
                                                     flag['value'] != 'none'
                                                         ? _getFlagColor(
                                                           flag['value']!,
-                                                        ).withOpacity(0.3)
-                                                        : Colors.grey
-                                                            .withOpacity(0.3),
-                                                width: 1,
+                                                        )
+                                                        : Colors.grey,
+                                                size: 14, // Giảm từ 10 xuống 8
                                               ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  _getFlagIcon(flag['value']!),
-                                                  color:
-                                                      flag['value'] != 'none'
-                                                          ? _getFlagColor(
-                                                            flag['value']!,
-                                                          )
-                                                          : Colors.grey,
-                                                  size: 8, // Giảm từ 10 xuống 8
-                                                ),
-                                                SizedBox(
-                                                  width: 1,
-                                                ), // Giảm từ 2 xuống 1
-                                                Flexible(
-                                                  child: Text(
-                                                    flag['label']!,
-                                                    style: TextStyle(
-                                                      color:
-                                                          flag['value'] !=
-                                                                  'none'
-                                                              ? _getFlagColor(
-                                                                flag['value']!,
-                                                              )
-                                                              : Theme.of(
-                                                                    context,
-                                                                  )
-                                                                  .colorScheme
-                                                                  .inversePrimary,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize:
-                                                          8, // Giảm từ 9 xuống 8
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                              SizedBox(
+                                                width: 1,
+                                              ), // Giảm từ 2 xuống 1
+                                              Flexible(
+                                                child: Text(
+                                                  flag['label']!,
+                                                  style: TextStyle(
+                                                    color:
+                                                        flag['value'] != 'none'
+                                                            ? _getFlagColor(
+                                                              flag['value']!,
+                                                            )
+                                                            : Theme.of(context)
+                                                                .colorScheme
+                                                                .inversePrimary,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize:
+                                                        14, // Giảm từ 9 xuống 8
                                                   ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
-                                        );
-                                      }).toList(),
-                                  onChanged: (String? newValue) {
-                                    if (newValue != null) {
-                                      setDialogState(() {
-                                        selectedFlag = newValue;
-                                      });
-                                    }
-                                  },
-                                ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    setDialogState(() {
+                                      selectedFlag = newValue;
+                                    });
+                                  }
+                                },
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
 
                     // Subtask option
@@ -1022,20 +962,20 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                             Icon(
                               Icons.add_circle_outline,
                               color: Theme.of(context).colorScheme.primary,
-                              size: 14, // Giảm từ 16 xuống 14
+                              size: 16, // Giảm từ 16 xuống 14
                             ),
                             SizedBox(width: 6), // Giảm từ 8 xuống 6
-                            Flexible(
+                            Expanded(
                               child: Text(
                                 "Thêm nhiệm vụ con",
                                 style: TextStyle(
-                                  fontSize: 12, // Giảm từ 13 xuống 12
+                                  fontSize: 16, // Giảm từ 13 xuống 12
                                   fontWeight: FontWeight.w500,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Spacer(),
+                            SizedBox(width: 6), // Giảm từ 8 xuống 6
                             if (subtasks.isNotEmpty)
                               Container(
                                 padding: EdgeInsets.symmetric(
@@ -1053,7 +993,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                                 child: Text(
                                   '${subtasks.length}',
                                   style: TextStyle(
-                                    fontSize: 9, // Giảm từ 10 xuống 9
+                                    fontSize: 14, // Giảm từ 10 xuống 9
                                     color:
                                         Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.w500,
@@ -1110,7 +1050,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                                                 Theme.of(
                                                   context,
                                                 ).colorScheme.outline,
-                                            fontSize: 11, // Giảm từ 12 xuống 11
+                                            fontSize: 16, // Giảm từ 12 xuống 11
                                           ),
                                         ),
                                       ],
@@ -1195,7 +1135,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                                               key: Key(entry.key.toString()),
                                               initialValue: entry.value,
                                               style: TextStyle(
-                                                fontSize: 11,
+                                                fontSize: 14,
                                               ), // Giảm từ 12 xuống 11
                                               onChanged: (inputSubtask) {
                                                 subtasks.update(
@@ -1211,7 +1151,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                                                         context,
                                                       ).colorScheme.outline,
                                                   fontSize:
-                                                      11, // Giảm từ 12 xuống 11
+                                                      14, // Giảm từ 12 xuống 11
                                                 ),
                                                 border: InputBorder.none,
                                                 contentPadding:
@@ -1288,7 +1228,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                                               child: Icon(
                                                 Icons.delete_outline,
                                                 color: Colors.red,
-                                                size: 14, // Giảm từ 16 xuống 14
+                                                size: 16, // Giảm từ 16 xuống 14
                                               ),
                                             ),
                                           ),
@@ -1388,7 +1328,7 @@ class _ProjectDetailViewState extends State<ProjectDetailView>
                               child: Text(
                                 task == null ? 'Tạo nhiệm vụ' : 'Cập nhật',
                                 style: TextStyle(
-                                  fontSize: 14, // Thêm font size nhỏ hơn
+                                  fontSize: 16, // Thêm font size nhỏ hơn
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

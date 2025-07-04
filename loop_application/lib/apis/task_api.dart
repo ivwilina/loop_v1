@@ -512,13 +512,52 @@ class TaskApi {
       print('Response body: ${response.body}');
       
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        print('Parsed data: $data');
+        print('Member stats in response: ${data['memberStats']}');
+        return data;
       } else {
         throw Exception('Failed to get task statistics: ${response.body}');
       }
     } catch (e) {
       print('Exception occurred: $e');
       throw Exception('Error getting task statistics: $e');
+    }
+  }
+
+  //* Debug member statistics (for development purposes)
+  static Future<Map<String, dynamic>> debugMemberStats(String projectId) async {
+    try {
+      final userController = UserController();
+      await userController.getUser();
+      
+      final token = await userController.getToken();
+      
+      if (token.isEmpty) {
+        throw Exception('User not logged in');
+      }
+      
+      print('Getting debug member stats for project: $projectId');
+      
+      final response = await http.get(
+        Uri.parse('${server_config.testURL}/task/debug/members/$projectId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      print('Debug response status: ${response.statusCode}');
+      print('Debug response body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to get debug info: ${response.body}');
+      }
+    } catch (e) {
+      print('Exception occurred: $e');
+      throw Exception('Error getting debug info: $e');
     }
   }
 

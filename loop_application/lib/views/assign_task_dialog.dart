@@ -260,10 +260,13 @@ class _AssignTaskDialogState extends State<AssignTaskDialog> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                     ),
                   )
-                  : Text('Gán nhiệm vụ'),
+                  : Text('Gán nhiệm vụ', style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,),)
         ),
       ],
     );

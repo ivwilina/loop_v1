@@ -23,6 +23,39 @@ class _TaskStatisticsWidgetState extends State<TaskStatisticsWidget> {
     _loadStatistics();
   }
 
+  Future<void> _testApiConnection() async {
+    try {
+      print('=== Testing API connection ===');
+      
+      // Test thống kê thông thường
+      print('1. Testing regular statistics...');
+      final data = await TaskApi.getTaskStatistics(widget.projectId);
+      print('✅ Regular API test successful');
+      print('📊 Data keys: ${data.keys}');
+      
+      // Kiểm tra cấu trúc dữ liệu
+      if (data['memberStats'] != null) {
+        print('✅ Member stats found');
+        print('📋 Member stats: ${data['memberStats']}');
+        print('📋 Member stats type: ${data['memberStats'].runtimeType}');
+        print('📋 Member stats length: ${data['memberStats'].length}');
+      } else {
+        print('❌ No member stats in API response');
+      }
+      
+      // Test debug API
+      print('2. Testing debug API...');
+      final debugData = await TaskApi.debugMemberStats(widget.projectId);
+      print('✅ Debug API test successful');
+      print('🔍 Debug data: $debugData');
+      
+      print('=== API test completed ===');
+      
+    } catch (e) {
+      print('❌ API test failed: $e');
+    }
+  }
+
   Future<void> _loadStatistics() async {
     try {
       setState(() {
@@ -31,11 +64,17 @@ class _TaskStatisticsWidgetState extends State<TaskStatisticsWidget> {
       });
 
       final data = await TaskApi.getTaskStatistics(widget.projectId);
+      
+      // Debug: In ra dữ liệu để kiểm tra
+      print('Statistics data: $data');
+      print('Member stats: ${data['memberStats']}');
+      
       setState(() {
         statisticsData = data;
         isLoading = false;
       });
     } catch (e) {
+      print('Error loading statistics: $e');
       setState(() {
         error = e.toString();
         isLoading = false;
@@ -71,6 +110,7 @@ class _TaskStatisticsWidgetState extends State<TaskStatisticsWidget> {
               onPressed: _loadStatistics,
               child: const Text('Thử lại'),
             ),
+            const SizedBox(height: 50)
           ],
         ),
       );
@@ -107,6 +147,10 @@ class _TaskStatisticsWidgetState extends State<TaskStatisticsWidget> {
             // Biểu đồ cột thay đổi trạng thái
             _buildStatusChangeBarChart(),
             const SizedBox(height: 16),
+
+            // Thống kê nhiệm vụ theo thành viên
+            _buildMemberTasksStatistics(),
+            const SizedBox(height: 75),
           ],
         ),
       ),
@@ -750,6 +794,360 @@ class _TaskStatisticsWidgetState extends State<TaskStatisticsWidget> {
         ],
       );
     }).toList();
+  }
+
+  Widget _buildMemberTasksStatistics() {
+    // Debug: In ra dữ liệu để kiểm tra
+    print('Building member statistics...');
+    print('Statistics data keys: ${statisticsData?.keys}');
+    print('Member stats raw: ${statisticsData!['memberStats']}');
+    
+    // Kiểm tra xem có dữ liệu memberStats không
+    if (statisticsData!['memberStats'] == null) {
+      print('memberStats is null');
+      return _buildEmptyMemberStats();
+    }
+    
+    List<Map<String, dynamic>> memberStats = [];
+    
+    try {
+      memberStats = List<Map<String, dynamic>>.from(
+        statisticsData!['memberStats'] ?? [],
+      );
+      print('Processed member stats: $memberStats');
+      print('Member stats length: ${memberStats.length}');
+    } catch (e) {
+      print('Error parsing member stats: $e');
+      return _buildEmptyMemberStats();
+    }
+
+    if (memberStats.isEmpty) {
+      return _buildEmptyMemberStats();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Thống kê theo thành viên nhóm',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Thành viên',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Tổng NV',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Hoàn thành',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Tỷ lệ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Data rows
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: memberStats.length,
+                itemBuilder: (context, index) {
+                  final member = memberStats[index];
+                  final totalTasks = member['totalTasks'] ?? 0;
+                  final completedTasks = member['completedTasks'] ?? 0;
+                  final completionRate = totalTasks > 0 
+                      ? (completedTasks / totalTasks * 100).toStringAsFixed(1)
+                      : '0.0';
+                  
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.grey[200]!,
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Avatar và tên
+                        Expanded(
+                          flex: 3,
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundImage: member['avatar'] != null
+                                    ? NetworkImage(member['avatar'])
+                                    : null,
+                                child: member['avatar'] == null
+                                    ? Text(
+                                        member['fullName']?.substring(0, 1).toUpperCase() ?? '?',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      member['fullName'] ?? 'Unknown',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (member['email'] != null)
+                                      Text(
+                                        member['email'],
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[600],
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Tổng nhiệm vụ
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            totalTasks.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        // Hoàn thành
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            completedTasks.toString(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.green[600],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        // Tỷ lệ với progress bar
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            children: [
+                              Text(
+                                '$completionRate%',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: _getCompletionRateColor(double.parse(completionRate)),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              LinearProgressIndicator(
+                                value: totalTasks > 0 ? completedTasks / totalTasks : 0,
+                                backgroundColor: Colors.grey[300],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _getCompletionRateColor(double.parse(completionRate)),
+                                ),
+                                minHeight: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyMemberStats() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Thống kê theo thành viên nhóm',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.people_outline,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Chưa có thông tin thành viên',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Dữ liệu sẽ hiển thị khi có thành viên được gán nhiệm vụ',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Tạo dữ liệu demo để test
+                      setState(() {
+                        statisticsData!['memberStats'] = [
+                          {
+                            'fullName': 'Nguyễn Văn A',
+                            'email': 'nguyenvana@example.com',
+                            'avatar': null,
+                            'totalTasks': 8,
+                            'completedTasks': 6
+                          },
+                          {
+                            'fullName': 'Trần Thị B',
+                            'email': 'tranthib@example.com',
+                            'avatar': null,
+                            'totalTasks': 5,
+                            'completedTasks': 3
+                          },
+                          {
+                            'fullName': 'Lê Văn C',
+                            'email': 'levanc@example.com',
+                            'avatar': null,
+                            'totalTasks': 10,
+                            'completedTasks': 9
+                          }
+                        ];
+                      });
+                    },
+                    child: const Text('Dữ liệu demo'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _loadStatistics,
+                    child: const Text('Tải lại'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _testApiConnection,
+                    child: const Text('Test API'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getCompletionRateColor(double rate) {
+    if (rate >= 80) return Colors.green;
+    if (rate >= 60) return Colors.orange;
+    if (rate >= 40) return Colors.yellow[700]!;
+    return Colors.red;
   }
 
   Widget _buildLegendItem(String label, Color color) {
