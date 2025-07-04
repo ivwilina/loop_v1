@@ -25,6 +25,7 @@ class _HomeTabState extends State<HomeTab> {
   CalendarFormat _calendarFormat = CalendarFormat.week;
 
   Map<DateTime, List<String>> customEventList = {};
+  TaskModel? _taskModel;
 
   void readTasks() {
     Provider.of<TaskModel>(context, listen: false).findAll();
@@ -37,31 +38,30 @@ class _HomeTabState extends State<HomeTab> {
     ).findByDate(inputDate);
   }
 
+  void _refreshCustomEventList() {
+    if (_taskModel != null && mounted) {
+      // Chỉ update customEventList, không trigger thêm events
+      getCustomEventList(_taskModel!);
+      setState(() {});
+    }
+  }
+
   //* Get tasks then convert to customEventList
   void getCustomEventList(TaskModel taskModel) {
     List<Task> tempList = taskModel.currentTask;
-    List<DateTime> datesContainTask = [];
-    for (var e in tempList) {
-      DateTime checkDate = convertToDefaultDate(e.deadline);
-      if (!datesContainTask.contains(checkDate)) {
-        datesContainTask.add(checkDate);
-      }
-    }
     Map<DateTime, List<String>> tempMap = {};
-    for (var e in datesContainTask) {
-      List<String> taskHolder = [];
-      for (var n in tempList) {
-          if (e.year == n.deadline.year &&
-              e.month == n.deadline.month &&
-              e.day == n.deadline.day) {
-            if (!taskHolder.contains(n.id.toString())) {
-              taskHolder.add(n.id.toString());
-            }
-          } 
+    
+    // Đưa tất cả tasks vào map theo ngày
+    for (var task in tempList) {
+      DateTime checkDate = convertToDefaultDate(task.deadline);
+      if (tempMap[checkDate] == null) {
+        tempMap[checkDate] = [];
       }
-      final event = <DateTime, List<String>>{e: taskHolder};
-      tempMap.addEntries(event.entries);
+      if (!tempMap[checkDate]!.contains(task.id.toString())) {
+        tempMap[checkDate]!.add(task.id.toString());
+      }
     }
+    
     customEventList = tempMap;
   }
 
@@ -92,14 +92,25 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   @override
+  void dispose() {
+    _taskModel?.removeListener(_refreshCustomEventList);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.sizeOf(context).width;
 
-    // readTasks();
-
-    // readTasksOnSpecificDate(dayToViewTask);
-
     final taskModel = context.watch<TaskModel>();
+    
+    // Thiết lập listener chỉ một lần
+    if (_taskModel != taskModel) {
+      _taskModel?.removeListener(_refreshCustomEventList);
+      _taskModel = taskModel;
+      _taskModel!.addListener(_refreshCustomEventList);
+      // Chỉ cập nhật customEventList khi taskModel thay đổi
+      getCustomEventList(taskModel);
+    }
 
     List<Task> selectedDateTasks = taskModel.taskOnSpecificDay;
 
@@ -116,9 +127,6 @@ class _HomeTabState extends State<HomeTab> {
         completedTask.add(e);
       }
     }
-    // List<Task> currentTasks = taskModel.currentTask;
-
-    getCustomEventList(taskModel);
 
     return Scaffold(
       appBar: AppBar(
@@ -155,11 +163,19 @@ class _HomeTabState extends State<HomeTab> {
                   dayToViewTask = convertToDefaultDate(selectedDay);
                   readTasksOnSpecificDate(dayToViewTask);
                   _focusedDay = focusedDay;
+                  // Force refresh customEventList khi chọn ngày khác
+                  if (_taskModel != null) {
+                    getCustomEventList(_taskModel!);
+                  }
                 });
               }
             },
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
+              // Refresh customEventList khi chuyển trang lịch
+              if (_taskModel != null) {
+                getCustomEventList(_taskModel!);
+              }
             },
 
             onHeaderTapped: (focusedDay) {
@@ -169,6 +185,10 @@ class _HomeTabState extends State<HomeTab> {
                 readTasksOnSpecificDate(dayToViewTask);
                 _selectedDay = focusedDay;
                 _focusedDay = focusedDay;
+                // Force refresh customEventList khi tap header
+                if (_taskModel != null) {
+                  getCustomEventList(_taskModel!);
+                }
               });
             },
 

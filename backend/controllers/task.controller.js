@@ -42,6 +42,9 @@ const create_task = async (req, res) => {
         }
 
         // Thêm ID nhiệm vụ vào dự án
+        if (!project.task) {
+            project.task = [];
+        }
         project.task.push(newTask);
         await project.save();
 
@@ -149,7 +152,9 @@ const delete_task = async (req, res) => {
         // Xóa ID nhiệm vụ khỏi dự án
         const project = await Project.findOne({ task: req.body.taskId });
         if (project) {
-            project.task = null; // Xóa tham chiếu nhiệm vụ
+            if (project.task && Array.isArray(project.task)) {
+                project.task = project.task.filter(taskId => taskId.toString() !== req.body.taskId);
+            }
             await project.save();
         }
 
@@ -177,15 +182,18 @@ const get_task_of_project = async (req, res) => {
         }
 
         console.log('Found project:', project.name);
-        console.log('Tasks found:', project.task.length);
+        
+        // Kiểm tra xem project.task có tồn tại và là array không
+        const tasks = project.task || [];
+        console.log('Tasks found:', tasks.length);
         
         // Debug: Ghi log trạng thái nhiệm vụ
-        project.task.forEach((task, index) => {
+        tasks.forEach((task, index) => {
             console.log(`Task ${index}: ${task.title} - Status: ${task.status}`);
         });
 
         // Trả về (các) nhiệm vụ liên quan đến dự án
-        res.status(200).json(project.task);
+        res.status(200).json(tasks);
     } catch (error) {
         console.error('Error in get_task_of_project:', error);
         res.status(500).json({ error: error.message });
@@ -552,7 +560,8 @@ const get_task_statistics = async (req, res) => {
             return res.status(404).json({ message: 'Project not found' });
         }
 
-        const tasks = project.task;
+        // Kiểm tra xem project.task có tồn tại và là array không
+        const tasks = project.task || [];
         
         // Thống kê theo trạng thái
         const statusStats = {
@@ -626,14 +635,16 @@ const get_task_statistics = async (req, res) => {
             }
 
             // Đếm thay đổi trạng thái từ logs
-            task.logs.forEach(log => {
-                const logDate = new Date(log.timestamp);
-                const logDateStr = logDate.toISOString().split('T')[0];
-                const changeStat = statusChangeStats.find(stat => stat.date === logDateStr);
-                if (changeStat) {
-                    changeStat.changes++;
-                }
-            });
+            if (task.logs && Array.isArray(task.logs)) {
+                task.logs.forEach(log => {
+                    const logDate = new Date(log.timestamp);
+                    const logDateStr = logDate.toISOString().split('T')[0];
+                    const changeStat = statusChangeStats.find(stat => stat.date === logDateStr);
+                    if (changeStat) {
+                        changeStat.changes++;
+                    }
+                });
+            }
         });
 
         // Tính thời gian hoàn thành trung bình

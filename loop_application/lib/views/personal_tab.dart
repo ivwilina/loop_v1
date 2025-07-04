@@ -123,8 +123,7 @@ class _PersonalTabState extends State<PersonalTab> {
     if (tasks.isEmpty) return SizedBox.shrink();
 
     final completed = tasks.where((t) => t.status == 2).length;
-    final inProgress = tasks.where((t) => t.status == 3 || t.status == 4).length;
-    final notStarted = tasks.where((t) => t.status == 0 || t.status == 1).length;
+    final pending = tasks.where((t) => t.status == 1).length;
     final completionRate = tasks.isNotEmpty ? (completed / tasks.length) * 100 : 0;
 
     // Đánh giá hiệu suất
@@ -167,11 +166,7 @@ class _PersonalTabState extends State<PersonalTab> {
                 ),
                 SizedBox(width: 8),
                 Expanded(
-                  child: _buildStatCard('Đang làm', inProgress.toString(), Colors.orange),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: _buildStatCard('Chưa bắt đầu', notStarted.toString(), Colors.grey),
+                  child: _buildStatCard('Đang làm', pending.toString(), Colors.orange),
                 ),
               ],
             ),

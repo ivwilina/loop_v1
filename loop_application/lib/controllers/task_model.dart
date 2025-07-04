@@ -142,7 +142,7 @@ class TaskModel extends ChangeNotifier {
   // }
 
   //*READ tasks in Category
-  Future<void> findByCategory(int categoryId) async {
+  Future<void> findByCategory(int categoryId, {bool notify = true}) async {
     List<Task> fetchedTasks =
         await isar.tasks.filter().categoryEqualTo(categoryId).findAll();
     currentTask.clear();
@@ -150,12 +150,19 @@ class TaskModel extends ChangeNotifier {
     currentTask.sort((a, b) {
       return a.deadline.compareTo(b.deadline);
     });
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   //*READ tasks on specific day from db
-  Future<void> findByDate(DateTime dayToSearch) async {
+  Future<void> findByDate(DateTime dayToSearch, {bool notify = true}) async {
+    // Luôn fetch fresh data từ database
     List<Task> fetchedTasks = await isar.tasks.where().findAll();
+    
+    // Cập nhật currentTask để đảm bảo sync
+    currentTask.clear();
+    currentTask.addAll(fetchedTasks);
+    
+    // Filter tasks cho ngày cụ thể
     taskOnSpecificDay.clear();
     for (var n in fetchedTasks) {
       if (dayToSearch.year == n.deadline.year &&
@@ -165,11 +172,12 @@ class TaskModel extends ChangeNotifier {
           taskOnSpecificDay.add(n);
         }
       }
-      taskOnSpecificDay.sort((a, b) {
-        return a.deadline.compareTo(b.deadline);
-      });
     }
-    notifyListeners();
+    // Sort sau khi hoàn thành vòng lặp
+    taskOnSpecificDay.sort((a, b) {
+      return a.deadline.compareTo(b.deadline);
+    });
+    if (notify) notifyListeners();
   }
 
   // //*READ tasks from db (specific date)
@@ -206,9 +214,7 @@ class TaskModel extends ChangeNotifier {
   //* UPDATE task status local (from pending to completed and reverse)
   Future<void> changeStatusLocal(Task task) async {
     final existingTask = await isar.tasks.get(task.id);
-    int oldCategory = 2;
     if (existingTask != null) {
-      oldCategory = existingTask.category;
       if (existingTask.status == 1) {
         existingTask.status = 2;
       } else if (existingTask.status == 2) {
@@ -216,8 +222,7 @@ class TaskModel extends ChangeNotifier {
       }
       await isar.writeTxn(() => isar.tasks.put(existingTask));
     }
-    await findByCategory(oldCategory);
-    // await fetchTaskWithDeadline();
+    await findAll(); // Cập nhật toàn bộ tasks
     bridgeFetch(task.deadline);
   }
 
@@ -234,67 +239,56 @@ class TaskModel extends ChangeNotifier {
   //* Mark as favorite
   Future<void> markAsFavorite(Task task) async {
     final existingTask = await isar.tasks.get(task.id);
-    int oldCategory = 2;
     if (existingTask != null) {
-      oldCategory = existingTask.category;
       (existingTask.category != 1)
           ? existingTask.category = 1
           : existingTask.category = 2;
       await isar.writeTxn(() => isar.tasks.put(existingTask));
     }
-    await findByCategory(oldCategory);
+    await findAll(); // Cập nhật toàn bộ tasks
   }
 
   //* UPDATE task's title
   Future<void> updateTaskTitle(Task task, String newTitle) async {
     final existingTask = await isar.tasks.get(task.id);
-    int oldCategory = task.category;
     if (existingTask != null) {
-      oldCategory = existingTask.category;
       existingTask.title = newTitle;
       await isar.writeTxn(() => isar.tasks.put(existingTask));
     }
+    await findAll(); // Cập nhật toàn bộ tasks
     findByDate(task.deadline);
-    await findByCategory(oldCategory);
-    // await fetchTaskWithDeadline();
     notifyListeners();
   }
 
   //* UPDATE task's note
   Future<void> updateTaskNote(Task task, String newNote) async {
     final existingTask = await isar.tasks.get(task.id);
-    int oldCategory = task.category;
     if (existingTask != null) {
-      oldCategory = existingTask.category;
       existingTask.note = newNote;
       await isar.writeTxn(() => isar.tasks.put(existingTask));
     }
-    await findByCategory(oldCategory);
+    await findAll(); // Cập nhật toàn bộ tasks
     notifyListeners();
   }
 
   //* UPDATE task's category
   Future<void> updateTaskCategory(Task task, int newCategory) async {
     final existingTask = await isar.tasks.get(task.id);
-    int oldCategory = task.category;
     if (existingTask != null) {
-      oldCategory = existingTask.category;
       existingTask.category = newCategory;
       await isar.writeTxn(() => isar.tasks.put(existingTask));
     }
-    await findByCategory(oldCategory);
+    await findAll(); // Cập nhật toàn bộ tasks
   }
 
   //* UPDATE task's deadline
   Future<void> updateTaskDeadline(Task task, DateTime newDeadline) async {
     final existingTask = await isar.tasks.get(task.id);
-    int oldCategory = task.category;
     if (existingTask != null) {
-      oldCategory = existingTask.category;
       existingTask.deadline = newDeadline;
       await isar.writeTxn(() => isar.tasks.put(existingTask));
     }
-    await findByCategory(oldCategory);
+    await findAll(); // Cập nhật toàn bộ tasks
     findByDate(existingTask!.deadline);
     notifyListeners();
   }
@@ -315,10 +309,14 @@ class TaskModel extends ChangeNotifier {
 
   //* DELETE a task
   Future<void> deleteTask(Task task) async {
-    int oldCategory = task.category;
+    DateTime taskDeadline = task.deadline;
+    
+    // Xóa task khỏi database
     await isar.writeTxn(() => isar.tasks.delete(task.id));
-    await findByCategory(oldCategory);
-    bridgeFetch(task.deadline);
+    
+    // Chỉ refresh data cần thiết, không thay đổi currentTask filter
+    await findAll(); // Cập nhật currentTask với tất cả tasks
+    await findByDate(taskDeadline, notify: false); // Cập nhật taskOnSpecificDay
   }
 
   //* DELETE multiple tasks
@@ -326,11 +324,14 @@ class TaskModel extends ChangeNotifier {
     for (var task in tasks) {
       await isar.writeTxn(() => isar.tasks.delete(task.id));
     }
+    await findAll(); // Cập nhật toàn bộ tasks
+    notifyListeners();
   }
 
   //*DELETE a subtask
   Future<void> deleteSubtask(int subtaskId, Task momTask) async {
     await isar.writeTxn(() => isar.subtasks.delete(subtaskId));
+    await findAll(); // Cập nhật toàn bộ tasks
     findByDate(momTask.deadline);
     findByCategory(momTask.category);
     notifyListeners();
@@ -338,6 +339,11 @@ class TaskModel extends ChangeNotifier {
 
   void bridgeFetch(DateTime deadline) {
     DateTime tempDate = deadline;
-    findByDate(tempDate);
+    findByDate(tempDate); // Sử dụng default notify = true
+  }
+
+  // Thêm method để refresh calendar events
+  void refreshCalendarEvents() {
+    notifyListeners();
   }
 }

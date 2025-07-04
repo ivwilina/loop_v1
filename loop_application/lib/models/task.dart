@@ -13,7 +13,7 @@ class Task {
   late bool isTeamTask;
   String? teamTaskId;
   late DateTime deadline;
-  late int status; //* 1: pending  2:completed  3:review
+  late int status; //* 1: pending  2:completed
   int? flag; //* 0: none  1:low  2:normal  3:high  4:urgent
   String? description;
   String? note;

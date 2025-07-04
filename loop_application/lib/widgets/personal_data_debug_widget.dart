@@ -159,8 +159,7 @@ class _PersonalDataDebugWidgetState extends State<PersonalDataDebugWidget> {
                       children: [
                         _buildStatItem('Tổng', _stats!['total']?.toString() ?? '0'),
                         _buildStatItem('Hoàn thành', _stats!['completed']?.toString() ?? '0'),
-                        _buildStatItem('Đang làm', _stats!['in_progress']?.toString() ?? '0'),
-                        _buildStatItem('Chờ', _stats!['pending']?.toString() ?? '0'),
+                        _buildStatItem('Đang làm', _stats!['pending']?.toString() ?? '0'),
                       ],
                     ),
                     const SizedBox(height: 8),

@@ -64,16 +64,12 @@ class PersonalDataService {
         // Deadline (1-7 ngày sau ngày tạo)
         task.deadline = currentDate.add(Duration(days: 1 + (i % 7)));
         
-        // Status (1: pending, 2: completed, 3: review, 4: in_progress)
+        // Status (1: pending, 2: completed)
         final statusRand = (day + i) % 10;
-        if (statusRand < 5) {
-          task.status = 2; // 50% completed
-        } else if (statusRand < 7) {
-          task.status = 3; // 20% review
-        } else if (statusRand < 9) {
-          task.status = 4; // 20% in_progress
+        if (statusRand < 6) {
+          task.status = 2; // 60% completed
         } else {
-          task.status = 1; // 10% pending
+          task.status = 1; // 40% pending
         }
         
         // Flag (0: none, 1: low, 2: normal, 3: high, 4: urgent)
@@ -107,9 +103,9 @@ class PersonalDataService {
         ..category = 1
         ..isTeamTask = false
         ..deadline = now.add(const Duration(days: 30))
-        ..status = 3
+        ..status = 1
         ..flag = 4
-        ..note = 'Đang trong quá trình review',
+        ..note = 'Đang chờ bắt đầu',
       
       Task()
         ..title = 'Học tập và phát triển bản thân'
@@ -134,8 +130,6 @@ class PersonalDataService {
       'total': tasks.length,
       'pending': tasks.where((t) => t.status == 1).length,
       'completed': tasks.where((t) => t.status == 2).length,
-      'review': tasks.where((t) => t.status == 3).length,
-      'in_progress': tasks.where((t) => t.status == 4).length,
       'none': tasks.where((t) => t.flag == 0).length,
       'low': tasks.where((t) => t.flag == 1).length,
       'normal': tasks.where((t) => t.flag == 2).length,
@@ -145,7 +139,7 @@ class PersonalDataService {
 
     debugPrint('📊 Thống kê dữ liệu được tạo:');
     debugPrint('   Total tasks: ${stats['total']}');
-    debugPrint('   Pending: ${stats['pending']} | Completed: ${stats['completed']} | Review: ${stats['review']} | In Progress: ${stats['in_progress']}');
+    debugPrint('   Pending: ${stats['pending']} | Completed: ${stats['completed']}');
     debugPrint('   None: ${stats['none']} | Low: ${stats['low']} | Normal: ${stats['normal']} | High: ${stats['high']} | Urgent: ${stats['urgent']}');
     
     debugPrint('✅ Hoàn thành tạo ${tasks.length} task mẫu cá nhân!');
@@ -160,8 +154,6 @@ class PersonalDataService {
       'total': personalTasks.length,
       'pending': personalTasks.where((t) => t.status == 1).length,
       'completed': personalTasks.where((t) => t.status == 2).length,
-      'review': personalTasks.where((t) => t.status == 3).length,
-      'in_progress': personalTasks.where((t) => t.status == 4).length,
       'categories': {
         'work': personalTasks.where((t) => t.category == 1).length,
         'personal': personalTasks.where((t) => t.category == 2).length,

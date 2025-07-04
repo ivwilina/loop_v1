@@ -61,7 +61,7 @@ router.get('/debug/members/:projectId', tokenAuth, async (req, res) => {
         name: project.name,
         memberCount: project.member ? project.member.length : 0,
         memberIds: project.member || [],
-        taskCount: project.task.length
+        taskCount: project.task ? project.task.length : 0
       },
       members: [],
       tasks: []
@@ -87,15 +87,17 @@ router.get('/debug/members/:projectId', tokenAuth, async (req, res) => {
     }
     
     // Lấy thông tin nhiệm vụ
-    project.task.forEach(task => {
-      debugInfo.tasks.push({
-        id: task._id,
-        title: task.title,
-        assignee: task.assignee,
-        status: task.status,
-        hasAssignee: !!task.assignee
+    if (project.task && Array.isArray(project.task)) {
+      project.task.forEach(task => {
+        debugInfo.tasks.push({
+          id: task._id,
+          title: task.title,
+          assignee: task.assignee,
+          status: task.status,
+          hasAssignee: !!task.assignee
+        });
       });
-    });
+    }
     
     res.json(debugInfo);
   } catch (error) {
